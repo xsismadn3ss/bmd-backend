@@ -1,21 +1,32 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  NotImplementedException,
+  Post,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateUserDTO } from './create-user.dto';
+import { CreateUserDTO } from 'src/user/user.dto';
+import { JwtService } from '@nestjs/jwt';
+import { UserService } from 'src/user/user.service';
+import { AuthCredentialsDTO, AuthLoginDto } from './auth.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    private readonly jwtService: JwtService,
+    private readonly userService: UserService,
   ) {}
 
-  // TODO: implementar endpoints para iniciar sesión, registrar usuarios y validar tokens
-
   @Post('register')
-  async register(@Body() body: CreateUserDTO) {
-    const {name, email, password} = body;
+  async register(@Body() body: CreateUserDTO): Promise<AuthCredentialsDTO> {
+    // TODO: implementar lógica para registrarse (debe devolver un AuthCredentialsDTO)
+    throw new NotImplementedException('Endpoint No implementado');
+  }
 
-    // verificar si el email esta en uso
-
-    return this.authService.register(name, email, password);
+  @Post('login')
+  async login(@Body() body: AuthLoginDto): Promise<AuthCredentialsDTO> {
+    // TODO: implementar lógica para iniciar sesión (debe devolver un AuthCredentialsDTO)
+    throw new NotImplementedException('No implementado');
   }
 }
