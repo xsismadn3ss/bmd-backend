@@ -34,7 +34,7 @@ export class UserService {
    * Registrar usuario
    * @param data DTO con datos para registrar un nuevo usuario
    * @returns usuario creado
-   * @throws error `405` en caso se intente crear un usuario con un email ya ocupado
+   * @throws error `409` en caso se intente crear un usuario con un email ya ocupado
    */
   async create(data: CreateUserDTO): Promise<UserDTO> {
     try {
