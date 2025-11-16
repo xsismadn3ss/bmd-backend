@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  NotImplementedException,
   Post,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -51,6 +50,23 @@ export class AuthController {
   @Post('login')
   async login(@Body() body: AuthLoginDto): Promise<AuthCredentialsDTO> {
     // TODO: implementar lógica para iniciar sesión (debe devolver un AuthCredentialsDTO)
-    throw new NotImplementedException('No implementado');
+    const {email, password} = body;
+
+    const existingUser = await this.userService.findByEmail(email);
+
+    await this.authService.comparePasswords(password, existingUser.password);
+
+    const payload = {
+      sub: existingUser.id,
+      name: existingUser.name,
+      email
+    }
+
+    const token = this.jwtService.sign(payload);
+
+    return {
+      name: existingUser.name,
+      token
+    }
   }
 }
