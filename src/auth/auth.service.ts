@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -23,6 +23,10 @@ export class AuthService {
     password: string,
     hashedPassword: string,
   ): Promise<boolean> {
-    return bcrypt.compare(password, hashedPassword);
+    const isValid = await bcrypt.compare(password, hashedPassword);
+
+    if (!isValid) throw new UnauthorizedException('contrasenia incorrecta');
+
+    return true;
   }
 }
