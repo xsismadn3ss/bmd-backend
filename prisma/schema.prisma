@@ -20,6 +20,26 @@ model User {
   password  String
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  meetups   Meetup[]
 
   @@map("users")
+}
+
+model Meetup {
+  id            Int      @id @default(autoincrement())
+  createdBy     Int      @map("created_by")
+  title         String   @db.VarChar(100)
+  description   String   @db.Text
+  date          DateTime  // only date will be used (time will be ignored)
+  startTime     String   @db.VarChar(5)  // "HH:MM" format
+  endTime       String   @db.VarChar(5)         
+  locationName  String   @db.VarChar(150) @map("location_name")
+  latitude      Decimal
+  longitude     Decimal
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [createdBy], references: [id])
+
+  @@map("meetups")
 }
