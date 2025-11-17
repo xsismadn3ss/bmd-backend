@@ -39,13 +39,11 @@ export class UserService {
    */
   async create(data: CreateUserDTO): Promise<User> {
     try {
-
       return await this.prisma.user.create({
         data: {
           ...data,
         },
       });
-
     } catch (error) {
       if (error.code === 'P2002') {
         throw new ConflictException('Ya existe una cuenta con este email');
