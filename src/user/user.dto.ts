@@ -1,40 +1,35 @@
 import {
   IsString,
   IsNotEmpty,
-  IsInt,
   IsEmail,
   IsStrongPassword,
 } from 'class-validator';
-
-/**
- * Esquema para representar usuarios
- */
-export class UserDTO {
-  @IsInt()
-  id: number;
-
-  @IsNotEmpty()
-  @IsString()
-  name: string;
-
-  @IsNotEmpty()
-  @IsString()
-  @IsEmail()
-  email: string;
-}
+import { ApiProperty } from '@nestjs/swagger';
 
 /**
  * Esquema para crear usuarios
  */
 export class CreateUserDTO {
+  @ApiProperty({
+    example: 'Satoshi Nakamoto',
+    description: 'Nombre completo del usuario',
+  })
   @IsNotEmpty()
   @IsString()
   name: string;
 
+  @ApiProperty({
+    example: 'satoshi@example.com',
+    description: 'Correo electrónico del usuario',
+  })
   @IsNotEmpty()
   @IsEmail()
   email: string;
 
+  @ApiProperty({
+    example: 'strongPassword123',
+    description: 'Contraseña del usuario',
+  })
   @IsNotEmpty()
   @IsString()
   @IsStrongPassword({
@@ -42,7 +37,7 @@ export class CreateUserDTO {
     minLowercase: 1,
     minUppercase: 1,
     minNumbers: 1,
-    minSymbols: 1
+    minSymbols: 1,
   })
   password: string;
 }

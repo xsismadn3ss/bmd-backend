@@ -4,7 +4,8 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateUserDTO, UserDTO } from './user.dto';
+import { CreateUserDTO } from './user.dto';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -16,7 +17,7 @@ export class UserService {
    * @returns Usuario filtrado por email
    * @throws error `404` en caso no se encuentre el usuario
    */
-  async findByEmail(email: string): Promise<UserDTO> {
+  async findByEmail(email: string): Promise<User> {
     const user = await this.prisma.user.findUnique({
       where: {
         email,
@@ -26,8 +27,8 @@ export class UserService {
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');
     }
-    const { password, ...userWithoutPassword } = user;
-    return userWithoutPassword as UserDTO;
+
+    return user;
   }
 
   /**
@@ -36,15 +37,13 @@ export class UserService {
    * @returns usuario creado
    * @throws error `409` en caso se intente crear un usuario con un email ya ocupado
    */
-  async create(data: CreateUserDTO): Promise<UserDTO> {
+  async create(data: CreateUserDTO): Promise<User> {
     try {
-      const createdUser = await this.prisma.user.create({
+      return await this.prisma.user.create({
         data: {
           ...data,
         },
       });
-      const { password, ...userWithoutPassword } = createdUser;
-      return userWithoutPassword as UserDTO;
     } catch (error) {
       if (error.code === 'P2002') {
         throw new ConflictException('Ya existe una cuenta con este email');
