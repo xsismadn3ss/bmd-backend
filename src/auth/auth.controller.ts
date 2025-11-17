@@ -1,14 +1,12 @@
-import {
-  Body,
-  Controller,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDTO } from 'src/user/user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
 import { AuthCredentialsDTO, AuthLoginDto } from './auth.dto';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -19,38 +17,56 @@ export class AuthController {
 
   /**
    * Registrar usuario
-   * @param data CreateUserDTO con datos para registrar un nuevo usuario
    * @returns AuthCredentialsDTO con el nombre del usuario y el token
+   * @param body cuerpo de la petición
    */
   @Post('register')
+  @ApiOperation({ summary: 'Registrar un nuevo usuario' })
+  @ApiBody({
+    type: CreateUserDTO,
+    required: true,
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Usuario registrado correctamente',
+    type: AuthCredentialsDTO,
+  })
+  @HttpCode(HttpStatus.CREATED)
   async register(@Body() body: CreateUserDTO): Promise<AuthCredentialsDTO> {
-    const {name, email, password} = body;
+    const { name, email, password } = body;
     const passwordHash = await this.authService.hashPassword(password);
 
     const user = await this.userService.create({
       name,
       email,
-      password: passwordHash
+      password: passwordHash,
     });
 
     const payload = {
       sub: user.id,
       name: user.name,
-      email: user.email
-    }
+      email: user.email,
+    };
 
     const token = this.jwtService.sign(payload);
 
     return {
       name,
-      token
-    }
+      token,
+    } as AuthCredentialsDTO;
   }
 
   @Post('login')
+  @ApiOperation({ summary: 'Iniciar sesión' })
+  @ApiBody({ type: AuthLoginDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Usuario autenticado correctamente',
+    type: AuthCredentialsDTO,
+  })
+  @HttpCode(HttpStatus.OK)
   async login(@Body() body: AuthLoginDto): Promise<AuthCredentialsDTO> {
-    // TODO: implementar lógica para iniciar sesión (debe devolver un AuthCredentialsDTO)
-    const {email, password} = body;
+    const { email, password } = body;
 
     const existingUser = await this.userService.findByEmail(email);
 
@@ -59,14 +75,14 @@ export class AuthController {
     const payload = {
       sub: existingUser.id,
       name: existingUser.name,
-      email
-    }
+      email,
+    };
 
     const token = this.jwtService.sign(payload);
 
     return {
       name: existingUser.name,
-      token
-    }
+      token,
+    } as AuthCredentialsDTO;
   }
 }
