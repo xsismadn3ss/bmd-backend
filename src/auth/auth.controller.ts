@@ -1,9 +1,9 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDTO } from 'src/user/user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
-import { AuthCredentialsDTO, AuthLoginDto } from './auth.dto';
+import { AuthCredentialsDTO, AuthLoginDto, ValidateTokenDTO } from './auth.dto';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('auth')
@@ -84,5 +84,30 @@ export class AuthController {
       name: existingUser.name,
       token,
     } as AuthCredentialsDTO;
+  }
+
+  @Post('validate')
+  @ApiOperation({summary: 'Validate token JWT'})
+  @ApiBody({type: ValidateTokenDTO})
+  @ApiResponse({
+    status: 200,
+    description: 'token is valid',
+    schema: {
+      example: {name: 'Arthur'}
+    }
+  })
+  @HttpCode(HttpStatus.OK)
+  async validateToken(@Body() body: ValidateTokenDTO): Promise<{name: string}> {
+    const {token} = body;
+
+    try {
+      const payload = await this.jwtService.verifyAsync(token);
+
+      return {
+        name: payload.name
+      };
+    } catch (error) {
+      throw new UnauthorizedException('invalid or expired token');
+    }
   }
 }

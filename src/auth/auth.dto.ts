@@ -36,3 +36,13 @@ export class AuthCredentialsDTO {
   @IsString()
   token: string;
 }
+
+export class ValidateTokenDTO {
+  @ApiProperty({
+    description: "token to validate",
+    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiZW1haWwiOiJqb2huQGV4YW1wbGUuY29tIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+  })
+  @IsNotEmpty()
+  @IsString()
+  token: string;
+}
