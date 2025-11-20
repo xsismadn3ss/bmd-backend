@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDTO } from './user.dto';
-import { User } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -17,11 +16,18 @@ export class UserService {
    * @returns Usuario filtrado por email
    * @throws error `404` en caso no se encuentre el usuario
    */
-  async findByEmail(email: string): Promise<User> {
+  async findByEmail(email: string) {
     const user = await this.prisma.user.findUnique({
       where: {
         email,
       },
+      include: {
+        roles: {
+          include: {
+            role: true
+          }
+        }
+      }
     });
 
     if (!user) {
@@ -37,12 +43,25 @@ export class UserService {
    * @returns usuario creado
    * @throws error `409` en caso se intente crear un usuario con un email ya ocupado
    */
-  async create(data: CreateUserDTO): Promise<User> {
+  async create(data: CreateUserDTO) {
     try {
+      // get the user created with its default role
       return await this.prisma.user.create({
         data: {
           ...data,
+          roles: {
+            create: {
+              roleId: 1 // default user role: user
+            }
+          }
         },
+        include: {
+          roles: {
+            include: {
+              role: true
+            }
+          }
+        }
       });
     } catch (error) {
       if (error.code === 'P2002') {
