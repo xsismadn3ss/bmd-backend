@@ -20,6 +20,34 @@ model User {
   password  String
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  roles     UserRole[]
 
   @@map("users")
+}
+
+enum UserRoleEnum {
+  USER
+  ORGANIZER
+  ADMIN
+}
+
+model Role {
+  id       Int      @id @default(autoincrement())
+  name      UserRoleEnum @unique   
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  users     UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  userId Int @map("user_id")
+  roleId Int @map("role_id")
+
+  user User @relation(fields: [userId], references: [id])
+  role Role @relation(fields: [roleId], references: [id])
+
+  @@id([userId, roleId])
+  @@map("user_roles")
 }
