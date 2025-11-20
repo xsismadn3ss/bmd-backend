@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
 import { AuthCredentialsDTO, AuthLoginDto } from './auth.dto';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Public } from './public.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -20,6 +21,7 @@ export class AuthController {
    * @returns AuthCredentialsDTO con el nombre del usuario y el token
    * @param body cuerpo de la petición
    */
+  @Public()
   @Post('register')
   @ApiOperation({ summary: 'Registrar un nuevo usuario' })
   @ApiBody({
@@ -56,6 +58,7 @@ export class AuthController {
     } as AuthCredentialsDTO;
   }
 
+  @Public()
   @Post('login')
   @ApiOperation({ summary: 'Iniciar sesión' })
   @ApiBody({ type: AuthLoginDto })
