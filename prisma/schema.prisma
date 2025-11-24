@@ -14,12 +14,12 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
+  id        Int        @id @default(autoincrement())
   name      String
-  email     String   @unique
+  email     String     @unique
   password  String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
   roles     UserRole[]
   meetups   Meetup[]
 
@@ -27,37 +27,18 @@ model User {
 }
 
 model Meetup {
-  id            Int      @id @default(autoincrement())
-  createdBy     Int      @map("created_by")
-  title         String   @db.VarChar(100)
-  description   String   @db.Text
-  date          DateTime  // only date will be used (time will be ignored)
-  startTime     String   @db.VarChar(5)  // "HH:MM" format
-  endTime       String   @db.VarChar(5)         
-  locationName  String   @db.VarChar(150) @map("location_name")
-  latitude      Decimal
-  longitude     Decimal
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-
-  user User @relation(fields: [createdBy], references: [id])
-
-  @@map("meetups")
-}
-
-model Meetup {
-  id            Int      @id @default(autoincrement())
-  createdBy     Int      @map("created_by")
-  title         String   @db.VarChar(100)
-  description   String   @db.Text
-  date          DateTime  // only date will be used (time will be ignored)
-  startTime     String   @db.VarChar(5)  // "HH:MM" format
-  endTime       String   @db.VarChar(5)         
-  locationName  String   @db.VarChar(150) @map("location_name")
-  latitude      Decimal
-  longitude     Decimal
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id           Int      @id @default(autoincrement())
+  createdBy    Int      @map("created_by")
+  title        String   @db.VarChar(100)
+  description  String   @db.Text
+  date         DateTime // only date will be used (time will be ignored)
+  startTime    String   @db.VarChar(5) // "HH:MM" format
+  endTime      String   @db.VarChar(5)
+  locationName String   @map("location_name") @db.VarChar(150)
+  latitude     Decimal
+  longitude    Decimal
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [createdBy], references: [id])
 
@@ -71,10 +52,10 @@ enum UserRoleEnum {
 }
 
 model Role {
-  id       Int      @id @default(autoincrement())
-  name      UserRoleEnum @unique   
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id        Int          @id @default(autoincrement())
+  name      UserRoleEnum @unique
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
   users     UserRole[]
 
   @@map("roles")
