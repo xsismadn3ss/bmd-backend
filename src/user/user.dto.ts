@@ -27,7 +27,7 @@ export class CreateUserDTO {
   email: string;
 
   @ApiProperty({
-    example: 'strongPassword123',
+    example: '@strongPassword123',
     description: 'Contraseña del usuario',
   })
   @IsNotEmpty()

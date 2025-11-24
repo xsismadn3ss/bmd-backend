@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
 import { AuthCredentialsDTO, AuthLoginDto } from './auth.dto';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Public } from './public.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -20,6 +21,7 @@ export class AuthController {
    * @returns AuthCredentialsDTO con el nombre del usuario y el token
    * @param body cuerpo de la petición
    */
+  @Public()
   @Post('register')
   @ApiOperation({ summary: 'Registrar un nuevo usuario' })
   @ApiBody({
@@ -39,13 +41,16 @@ export class AuthController {
     const user = await this.userService.create({
       name,
       email,
-      password: passwordHash,
+      password: passwordHash
     });
+
+    const userRoles = user.roles.map((role) => role.role.name); // get the user's role names
 
     const payload = {
       sub: user.id,
       name: user.name,
       email: user.email,
+      roles: userRoles // include roles in the payload to access them later
     };
 
     const token = this.jwtService.sign(payload);
@@ -53,9 +58,10 @@ export class AuthController {
     return {
       name,
       token,
-    } as AuthCredentialsDTO;
+    }
   }
 
+  @Public()
   @Post('login')
   @ApiOperation({ summary: 'Iniciar sesión' })
   @ApiBody({ type: AuthLoginDto })
@@ -72,10 +78,13 @@ export class AuthController {
 
     await this.authService.comparePasswords(password, existingUser.password);
 
+    const existingUserRoles = existingUser.roles.map(role => role.role.name);
+
     const payload = {
       sub: existingUser.id,
       name: existingUser.name,
       email,
+      roles: existingUserRoles
     };
 
     const token = this.jwtService.sign(payload);
@@ -83,6 +92,6 @@ export class AuthController {
     return {
       name: existingUser.name,
       token,
-    } as AuthCredentialsDTO;
+    }
   }
 }
