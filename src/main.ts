@@ -31,7 +31,18 @@ async function bootstrap() {
       .setTitle('API - BMD Backend')
       .setDescription('Documentación de la API')
       .setVersion('1.0.0')
-      .addBearerAuth()
+      // configuring bearer auth for swagger
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          name: 'Authorization',
+          description: 'Introduce your JWT token',
+          in: 'header',
+        },
+        'access-token',
+      )
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
