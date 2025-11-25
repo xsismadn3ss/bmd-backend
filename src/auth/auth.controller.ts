@@ -1,11 +1,12 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDTO } from 'src/user/user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
 import { AuthCredentialsDTO, AuthLoginDto } from './auth.dto';
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from './public.decorator';
+import type { Request } from 'express';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -93,5 +94,19 @@ export class AuthController {
       name: existingUser.name,
       token,
     }
+  }
+
+  @Get('validate-token')
+  @ApiOperation({summary: "Validar el token del usuario"})
+  @ApiResponse({
+    status: 200,
+    description: 'Mensaje de bienvenida si el token es válido',
+    type: Object
+  })
+  @ApiBearerAuth('access-token') // bearer token required
+  @HttpCode(HttpStatus.OK)
+  async validateToken(@Req() req: Request): Promise<{message: string}> {
+    const user = req['user'];
+    return {message: `Bienvenido ${user.name}`};
   }
 }
