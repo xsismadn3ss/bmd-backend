@@ -1,8 +1,10 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from "@nestjs/common";
+import { Body, Controller, HttpCode, HttpStatus, Post, Req } from "@nestjs/common";
 import { CreateMeetupDTO, MeetupResponseDTO} from "./meetups.dtos";
 import { MeetupsService } from "./meetups.service";
 import { MeetupEntity } from "./meetups.dtos";
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import type { Request } from "express";
+import { JwtUser } from "src/auth/interfaces/jwt-user.interface";
 
 @ApiTags('meetups')
 @Controller('meetups')
@@ -20,9 +22,12 @@ export class MeetupsController {
         description: "meetup registrada exitosamente",
         type: MeetupResponseDTO
     })
+    @ApiBearerAuth('access-token')
     @HttpCode(HttpStatus.CREATED)
-    async create(@Body() body: CreateMeetupDTO): Promise<MeetupResponseDTO>  {
-        const meetup = await this.meetupsService.create(body);
+    async create(@Req() req: Request & {user: JwtUser}, @Body() body: CreateMeetupDTO): Promise<MeetupResponseDTO>  { 
+        const userId = req.user.sub;
+
+        const meetup = await this.meetupsService.create(body, userId);
 
         // this mapping is necessary because MeetupResponseDTO's meetup property is of type MeetupEntity
         const entity = Object.assign(new MeetupEntity(), meetup);

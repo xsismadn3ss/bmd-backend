@@ -1,6 +1,5 @@
 import { 
   IsDateString, 
-  IsInt, 
   IsLatitude, 
   IsLongitude, 
   IsNotEmpty, 
@@ -8,17 +7,9 @@ import {
   Matches, 
   MaxLength 
 } from "class-validator";
-import type { Prisma} from "@prisma/client";
-import { ApiExtraModels, ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateMeetupDTO {
-  @ApiProperty({
-    example: 1,
-    description: "Id of the user who creates the meetup"
-  })
-  @IsInt()
-  createdBy: number;
-
   @ApiProperty({
     example: "Adopting bitcoin",
     description: "Title of the meetup",

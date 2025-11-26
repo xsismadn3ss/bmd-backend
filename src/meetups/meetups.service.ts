@@ -6,14 +6,16 @@ import { Meetup } from "@prisma/client";
 @Injectable() 
 export class MeetupsService {
     constructor(private readonly prisma: PrismaService){}
-    async create(dto: CreateMeetupDTO): Promise<Meetup> {
-        const {createdBy, title, description, date, startTime, endTime, locationName, latitude, longitude} = dto;
+    async create(dto: CreateMeetupDTO, userId: number): Promise<Meetup> {
+        const {title, description, date, startTime, endTime, locationName, latitude, longitude} = dto;
+        // later validate that date is not in the past:
+
         // validate that end time is not less or equal to start time
         const start = this.parseTime(startTime);
         const end = this.parseTime(endTime);
 
         if (end <= start) {
-            throw new BadRequestException("end time has to be greater than start time");
+            throw new BadRequestException("la hora de finalización debe ser posterior a la hora de inicio");
         }
 
         // Crear la fecha en formato Date
@@ -21,16 +23,16 @@ export class MeetupsService {
 
         return this.prisma.meetup.create({
             data: {
-            createdBy: createdBy,
-            title: title,
-            description: description,
-            date: fullDate,
-            startTime: startTime,
-            endTime: endTime,
-            locationName: locationName,
-            latitude: latitude,
-            longitude: longitude,
-            },
+              createdBy: userId,
+              title: title,
+              description: description,
+              date: fullDate,
+              startTime: startTime,
+              endTime: endTime,
+              locationName: locationName,
+              latitude: latitude,
+              longitude: longitude
+            }
         });
   }
 
