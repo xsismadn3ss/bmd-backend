@@ -8,9 +8,19 @@ export class MeetupsService {
     constructor(private readonly prisma: PrismaService){}
     async create(dto: CreateMeetupDTO, userId: number): Promise<Meetup> {
         const {title, description, date, startTime, endTime, locationName, latitude, longitude} = dto;
-        // later validate that date is not in the past:
 
+        const meetupDate = new Date(`${date}T${startTime}`);
+
+        const now = new Date();
+
+        // validate that the meetup's date is not in the past.
+
+        if (meetupDate < now) {
+          throw new BadRequestException("la fecha del meetup no puede ser en el pasado");
+        }
+        
         // validate that end time is not less or equal to start time
+
         const start = this.parseTime(startTime);
         const end = this.parseTime(endTime);
 
@@ -18,8 +28,7 @@ export class MeetupsService {
             throw new BadRequestException("la hora de finalización debe ser posterior a la hora de inicio");
         }
 
-        // Crear la fecha en formato Date
-        const fullDate = new Date(date);
+        const fullDate = new Date(date); // create date object because prisma needs a Date type. This date isn't affected by timezones since time is not specified.
 
         return this.prisma.meetup.create({
             data: {
