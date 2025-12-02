@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { CreateMeetupDTO } from "./meetups.dtos";
+import { CreateMeetupDTO, GetMeetupsDTO } from "./meetups.dtos";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Meetup } from "@prisma/client";
 
@@ -50,5 +50,48 @@ export class MeetupsService {
     const [hour, minutes] = time.split(":").map((number) => Number(number));
     return hour * 60 + minutes;
   }
+
+  async get(body: GetMeetupsDTO): Promise<Meetup[]> {
+    const {startDate, endDate, startTime, endTime, boundaries} = body;
+
+    const where: any = {};
+
+    if (startDate || endDate) {
+      where.date = {};
+
+      if (startDate) {
+        where.date.gte = new Date(startDate);
+      }
+
+      if (endDate) {
+        where.date.lte = new Date(endDate);
+      }
+    }
+
+    if (startTime) {
+      where.startTime = {
+        gte: startTime
+      }
+    }
+
+    if (endTime) {
+      where.endTime = {
+        lte: endTime
+      }
+    }
+
+    if (boundaries) {
+      where.latitude = {
+        gte: boundaries.minLat,
+        lte: boundaries.maxLat
+      }
+      where.longitude = {
+        gte: boundaries.minLng,
+        lte: boundaries.maxLng
+      }
+    }
+
+    return this.prisma.meetup.findMany({where});
+  };
     
 }

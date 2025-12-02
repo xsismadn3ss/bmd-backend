@@ -1,10 +1,11 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Req } from "@nestjs/common";
-import { CreateMeetupDTO, MeetupResponseDTO} from "./meetups.dtos";
+import { CreateMeetupDTO, GetMeetupsDTO, GetMeetupsResponseDTO, MeetupResponseDTO} from "./meetups.dtos";
 import { MeetupsService } from "./meetups.service";
 import { MeetupEntity } from "./meetups.dtos";
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { Request } from "express";
 import { JwtUser } from "src/auth/interfaces/jwt-user.interface";
+import { Public } from "src/auth/public.decorator";
 
 @ApiTags('meetups')
 @Controller('meetups')
@@ -36,5 +37,23 @@ export class MeetupsController {
             message: "meetup creada exitosamente",
             meetup: entity
         }
+    }
+
+    @Public()
+    @Post("filter")
+    @ApiOperation({summary: "get all meetups with optional filters"})
+    @ApiBody({type: GetMeetupsDTO, required: true})
+    @ApiResponse({
+        status: 200,
+        description: "list of meetups"
+    })
+    @HttpCode(HttpStatus.OK)
+    async get(@Body() body: GetMeetupsDTO): Promise<GetMeetupsResponseDTO> {
+        const meetups = await this.meetupsService.get(body);
+
+        return {
+            meetups
+        }
+
     }
 }

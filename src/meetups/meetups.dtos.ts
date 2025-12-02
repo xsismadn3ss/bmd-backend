@@ -3,11 +3,16 @@ import {
   IsLatitude, 
   IsLongitude, 
   IsNotEmpty, 
+  IsOptional, 
   IsString, 
   Matches, 
-  MaxLength 
+  MaxLength, 
+  ValidateNested
 } from "class-validator";
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { Meetup } from "@prisma/client";
+import { BoundariesDTO } from "./boundaries.dto";
+import { Type } from "class-transformer";
 
 export class CreateMeetupDTO {
   @ApiProperty({
@@ -174,4 +179,58 @@ export class MeetupResponseDTO {
     type: MeetupEntity
   })
   meetup: MeetupEntity;
+}
+
+export class GetMeetupsDTO {
+  @ApiPropertyOptional({
+    example: "2025-01-01",
+    description: "start date",
+    type: String
+  })
+  @IsOptional()
+  @IsDateString()
+  startDate?: string;
+
+  @ApiPropertyOptional({
+    example: "2025-12-31",
+    description: "end date",
+    type: String
+  })
+  @IsOptional()
+  @IsDateString()
+  endDate?: string;
+
+  @ApiPropertyOptional({
+    example: "00:00",
+    description: "start time",
+    type: String
+  })
+  @IsOptional()
+  @IsString()
+  startTime?: string;
+
+  @ApiPropertyOptional({
+    example: "23:59",
+    description: "end time",
+    type: String
+  })
+  @IsOptional()
+  @IsString()
+  endTime?: string;
+
+  @ApiPropertyOptional({
+    description: "boundaries",
+    type: BoundariesDTO
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => BoundariesDTO)
+  boundaries?: BoundariesDTO;
+}
+
+export class GetMeetupsResponseDTO {
+  @ApiProperty({
+    description: "List of meetups"
+  })
+  meetups: Meetup[];
 }
