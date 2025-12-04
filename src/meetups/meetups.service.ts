@@ -6,6 +6,7 @@ import { Meetup } from "@prisma/client";
 @Injectable() 
 export class MeetupsService {
     constructor(private readonly prisma: PrismaService){}
+    
     async create(dto: CreateMeetupDTO, userId: number): Promise<Meetup> {
         const {title, description, date, startTime, endTime, locationName, latitude, longitude} = dto;
 
@@ -57,38 +58,18 @@ export class MeetupsService {
     const where: any = {};
 
     if (startDate || endDate) {
-      where.date = {};
-
-      if (startDate) {
-        where.date.gte = new Date(startDate);
-      }
-
-      if (endDate) {
-        where.date.lte = new Date(endDate);
-      }
+      where.date = {
+      ...(startDate && { gte: new Date(startDate) }),
+      ...(endDate && { lte: new Date(endDate) })
+      };
     }
 
-    if (startTime) {
-      where.startTime = {
-        gte: startTime
-      }
-    }
-
-    if (endTime) {
-      where.endTime = {
-        lte: endTime
-      }
-    }
+    if (startTime) where.startTime = { gte: startTime };
+    if (endTime) where.endTime = { lte: endTime };
 
     if (boundaries) {
-      where.latitude = {
-        gte: boundaries.minLat,
-        lte: boundaries.maxLat
-      }
-      where.longitude = {
-        gte: boundaries.minLng,
-        lte: boundaries.maxLng
-      }
+      where.latitude = { gte: boundaries.minLat, lte: boundaries.maxLat };
+      where.longitude = { gte: boundaries.minLng, lte: boundaries.maxLng };
     }
 
     return this.prisma.meetup.findMany({where});
