@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from "@nestjs/common";
 import { CreateMeetupDTO, GetMeetupsDTO } from "./meetups.dtos";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Meetup } from "@prisma/client";
+import { parseTime } from "src/utils/time";
 
 @Injectable() 
 export class MeetupsService {
@@ -22,8 +23,8 @@ export class MeetupsService {
         
         // validate that end time is not less or equal to start time
 
-        const start = this.parseTime(startTime);
-        const end = this.parseTime(endTime);
+        const start = parseTime(startTime);
+        const end = parseTime(endTime);
 
         if (end <= start) {
             throw new BadRequestException("la hora de finalización debe ser posterior a la hora de inicio");
@@ -44,12 +45,6 @@ export class MeetupsService {
               longitude: longitude
             }
         });
-  }
-
-  // Function to convert HH:mm to minutes to be able to compare them.
-  private parseTime(time: string) {
-    const [hour, minutes] = time.split(":").map((number) => Number(number));
-    return hour * 60 + minutes;
   }
 
   async get(body: GetMeetupsDTO): Promise<Meetup[]> {
