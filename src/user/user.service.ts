@@ -70,4 +70,31 @@ export class UserService {
       throw error;
     }
   }
+
+  /**
+   * find a user by id
+   * @param id user's id
+   * @returns found user
+   * @throws error 404 if not found
+   */
+  async getById(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id
+      },
+      include: {
+        roles: {
+          include: {
+            role: true
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      throw new NotFoundException("user not found");
+    }
+
+    return user;
+  }
 }
