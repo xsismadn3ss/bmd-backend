@@ -6,27 +6,27 @@ import { ProfileDTO } from './profile.dto';
 
 @Controller('users')
 export class UserController {
-    constructor(private readonly userService: UserService) {
-    }
+  constructor(private readonly userService: UserService) {}
 
-    @Get("/me")
-    @ApiOperation({
-        summary: "get my profile information"
-    })
-    @ApiResponse({
-        status: 200,
-        description: "returns the user's profile information"
-    })
-    @ApiBearerAuth("access-token")
-    async getMe(@Req() req: Request): Promise<ProfileDTO> {
-        const user = await this.userService.getById(req.user.sub);
+  @Get('/me')
+  @ApiOperation({
+    summary: 'get my profile information',
+  })
+  @ApiResponse({
+    status: 200,
+    description: "returns the user's profile information",
+    type: ProfileDTO,
+  })
+  @ApiBearerAuth('access-token')
+  async getMe(@Req() req: Request): Promise<ProfileDTO> {
+    const user = await this.userService.getById(req.user.sub);
 
-        return {
-            name: user.name,
-            email: user.email,
-            roles: user.roles.map(role => role.role.name),
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt
-        }
-    }
+    return {
+      name: user.name,
+      email: user.email,
+      roles: user.roles.map((role) => role.role.name),
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    } as ProfileDTO;
+  }
 }
