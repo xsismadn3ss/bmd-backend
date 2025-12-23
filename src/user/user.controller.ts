@@ -1,8 +1,8 @@
-import { Controller, Get, Req } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 import type { Request } from 'express';
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { ProfileDTO } from './profile.dto';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ProfileDTO, UpdateProfileDTO } from './profile.dtos';
 
 @Controller('users')
 export class UserController {
@@ -28,5 +28,40 @@ export class UserController {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     } as ProfileDTO;
+  }
+
+  @Patch('/me')
+  @ApiOperation({
+    summary: 'update my profile information',
+  })
+  @ApiBody({
+    type: UpdateProfileDTO,
+    required: true
+  })
+  @ApiResponse({
+    status: 200,
+    description: "updates and returns the user's profile information",
+    type: ProfileDTO,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'No data provided to update',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+  })
+  @ApiBearerAuth('access-token')
+  async updateMe(@Req() req: Request, @Body() body: UpdateProfileDTO): Promise<ProfileDTO> {
+    const updatedUser = await this.userService.updateById(req.user.sub, body);
+    
+    return {
+      name: updatedUser.name,
+      email: updatedUser.email,
+      roles: updatedUser.roles.map((role) => role.role.name),
+      createdAt: updatedUser.createdAt,
+      updatedAt: updatedUser.updatedAt
+    };
+
   }
 }

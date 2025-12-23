@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class ProfileDTO {
   @ApiProperty({ example: 'John Doe', description: 'Nombre del usuario' })
@@ -20,4 +21,14 @@ export class ProfileDTO {
     description: 'Fecha de actualización del usuario',
   })
   updatedAt: Date;
+}
+
+export class UpdateProfileDTO {
+  @ApiProperty({example: "Jane Doe", description: "New name of the user"})
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  name?: string;
+
+  // we can add more field to update in the future such as a description, avatar, etc.
 }
