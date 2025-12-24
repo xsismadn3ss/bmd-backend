@@ -92,8 +92,7 @@ describe('MeetupsService', () => {
       expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
         where: {
           title: {
-            contains: "bitcoin",
-            mode: "insensitive"
+            contains: "bitcoin"
           }
         }
       });
