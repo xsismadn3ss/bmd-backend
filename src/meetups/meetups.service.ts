@@ -48,9 +48,15 @@ export class MeetupsService {
   }
 
   async get(body: GetMeetupsDTO): Promise<Meetup[]> {
-    const {startDate, endDate, startTime, endTime, boundaries} = body;
+    const {title, startDate, endDate, startTime, endTime, boundaries} = body;
 
     const where: any = {};
+
+    if (title) {
+      where.title = {
+        contains: title
+      }
+    }
 
     if (startDate || endDate) {
       where.date = {

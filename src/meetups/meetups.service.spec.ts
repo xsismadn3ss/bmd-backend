@@ -77,111 +77,135 @@ describe('MeetupsService', () => {
 
   // start date filter
 
-  it('should filter from a start date', async () => {
-    await service.get({startDate: '2025-11-26'});
+  describe("get meetups with optional filters", () => {
+    it('Should return all meetups when no filters are given', async () => {
+      await service.get({});
 
-    expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
-      where: {
-        date: {
-          gte: new Date("2025-11-26")
+      expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
+        where: {}
+      });
+    });
+
+    it('should filter by title', async () => {
+      await service.get({title: "bitcoin"});
+
+      expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
+        where: {
+          title: {
+            contains: "bitcoin",
+            mode: "insensitive"
+          }
         }
-      }
+      });
     })
-  });
 
-  // end date filter
+    // start date filter
 
-  it('should filter to an end date', async () => {
-    await service.get({endDate: '2025-11-25'});
+    it('should filter from a start date', async () => {
+      await service.get({startDate: '2025-11-26'});
 
-    expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
-      where: {
-        date: {
-          lte: new Date('2025-11-25')
+      expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
+        where: {
+          date: {
+            gte: new Date("2025-11-26")
+          }
         }
-      }
-    })
-  });
-
-  // start and end date filter
-
-  it("should filter by both startDate and endDate", async () => {
-    await service.get({
-      startDate: "2025-11-20",
-      endDate: "2025-11-30"
+      })
     });
 
-    expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
-      where: {
-        date: {
-          gte: new Date("2025-11-20"),
-          lte: new Date("2025-11-30")
+    // end date filter
+
+    it('should filter to an end date', async () => {
+      await service.get({endDate: '2025-11-25'});
+
+      expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
+        where: {
+          date: {
+            lte: new Date('2025-11-25')
+          }
         }
-      }
+      })
     });
-  });
 
-  // start time filter
+    // start and end date filter
 
-  it("should filter by startTime", async () => {
-    await service.get({startTime: "10:00"});
+    it("should filter by both startDate and endDate", async () => {
+      await service.get({
+        startDate: "2025-11-20",
+        endDate: "2025-11-30"
+      });
 
-    expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
-      where: {
-        startTime: { gte: "10:00" }
-      },
+      expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
+        where: {
+          date: {
+            gte: new Date("2025-11-20"),
+            lte: new Date("2025-11-30")
+          }
+        }
+      });
     });
-  });
 
-  // end time filter
+    // start time filter
 
-  it("should filter by endTime", async () => {
-    await service.get({ endTime: "15:00" });
+    it("should filter by startTime", async () => {
+      await service.get({startTime: "10:00"});
 
-    expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
-      where: {
-        endTime: { lte: "15:00" }
-      },
-    });
-  });
-
-  // start and end time filter
-
-  it("should filter by start time and end time", async () => {
-    await service.get({ startTime: "12:00", endTime: "15:00" });
-
-    expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
-      where: {
-        startTime: { gte: "12:00"},
-        endTime: { lte: "15:00" }
-      },
-    });
-  });
-  
-  // boundaries filter
-
-  it('should filter by boundaries', async () => {
-    const boundaries: BoundariesDTO = {
-      minLat: 11.04,
-      maxLat: 12.9,
-      minLng: 4.4,
-      maxLng: 24.4
-    }
-
-    await service.get({boundaries});
-
-    expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
-      where: {
-        latitude: {
-          gte: boundaries.minLat,
-          lte: boundaries.maxLat
+      expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
+        where: {
+          startTime: { gte: "10:00" }
         },
-        longitude: {
-          gte: boundaries.minLng,
-          lte: boundaries.maxLng
-        }  
-      }
-    })
-  });
+      });
+    });
 
+    // end time filter
+
+    it("should filter by endTime", async () => {
+      await service.get({ endTime: "15:00" });
+
+      expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
+        where: {
+          endTime: { lte: "15:00" }
+        },
+      });
+    });
+
+    // start and end time filter
+
+    it("should filter by start time and end time", async () => {
+      await service.get({ startTime: "12:00", endTime: "15:00" });
+
+      expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
+        where: {
+          startTime: { gte: "12:00"},
+          endTime: { lte: "15:00" }
+        },
+      });
+    });
+  
+    // boundaries filter
+
+    it('should filter by boundaries', async () => {
+      const boundaries: BoundariesDTO = {
+        minLat: 11.04,
+        maxLat: 12.9,
+        minLng: 4.4,
+        maxLng: 24.4
+      }
+
+      await service.get({boundaries});
+
+      expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
+        where: {
+          latitude: {
+            gte: boundaries.minLat,
+            lte: boundaries.maxLat
+          },
+          longitude: {
+            gte: boundaries.minLng,
+            lte: boundaries.maxLng
+          }  
+        }
+      })
+    });
+  });
 });
