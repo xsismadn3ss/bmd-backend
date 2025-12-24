@@ -183,6 +183,15 @@ export class MeetupResponseDTO {
 
 export class GetMeetupsDTO {
   @ApiPropertyOptional({
+    example: "bitcoin",
+    description: "title keyword to filter meetups",
+    type: String
+  })
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @ApiPropertyOptional({
     example: "2025-01-01",
     description: "start date",
     type: String
