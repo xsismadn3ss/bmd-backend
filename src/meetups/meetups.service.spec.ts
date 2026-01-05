@@ -27,55 +27,48 @@ describe('MeetupsService', () => {
     jest.clearAllMocks();
   });
 
-  // -------- TEST 1: VALIDATE HOURS --------
-  it('should throw a bad request error if startTime is greater than or equal to endTime', async () => {
-    const dto: any = {
-      startTime: '10:00',
-      endTime: '09:30',
-    };
+  describe("create a meetup", () => {
+    // -------- TEST 1: VALIDATE HOURS --------
 
-    await expect(service.create(dto)).rejects.toThrow(BadRequestException);
-  });
+    it('should throw a bad request error if startTime is greater than or equal to endTime', async () => {
+      const dto: any = {
+        startTime: '10:00',
+        endTime: '09:30',
+      };
 
-  // -------- TEST 2: Succesfull creation --------
-  it('Should create a meetup succesfully', async () => {
-    const dto: any = {
-      createdBy: 1,
-      title: 'Meetup Test',
-      description: 'Una prueba',
-      date: '2025-11-20',
-      startTime: '10:00',
-      endTime: '12:00',
-      locationName: 'Parque',
-      latitude: 13.7,
-      longitude: -89.2,
-    };
+      await expect(service.create(dto, 1)).rejects.toThrow(BadRequestException);
+    });
 
-    const expectedResult = {
-      id: 1,
-      ...dto,
-      date: new Date(dto.date),
-    };
+    // -------- TEST 2: Succesfull creation --------
 
-    prismaMock.meetup.create.mockResolvedValue(expectedResult);
+    it('Should create a meetup succesfully', async () => {
+      const userId = 1;
 
-    const result = await service.create(dto);
+      const dto: any = {
+        title: 'Meetup Test',
+        description: 'Una prueba',
+        date: '2026-12-20',
+        startTime: '10:00',
+        endTime: '12:00',
+        locationName: 'Parque',
+        latitude: 13.7,
+        longitude: -89.2,
+      };
 
-    expect(prismaMock.meetup.create).toHaveBeenCalledTimes(1);
-    expect(result).toEqual(expectedResult);
-  });
+      const expectedResult = {
+        id: 1,
+        ...dto,
+        date: new Date(dto.date),
+      };
 
-  // no filters
+      prismaMock.meetup.create.mockResolvedValue(expectedResult);
 
-  it('Should return all meetups when no filters are given', async () => {
-    await service.get({});
+      const result = await service.create(dto, userId);
 
-    expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
-      where: {}
+      expect(prismaMock.meetup.create).toHaveBeenCalledTimes(1);
+      expect(result).toEqual(expectedResult);
     });
   })
-
-  // start date filter
 
   describe("get meetups with optional filters", () => {
     it('Should return all meetups when no filters are given', async () => {
