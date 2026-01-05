@@ -2,9 +2,12 @@ import {
   ConflictException,
   NotFoundException,
   Injectable,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDTO } from './user.dto';
+import { UpdateProfileDTO } from './profile.dtos';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -66,6 +69,65 @@ export class UserService {
     } catch (error) {
       if (error.code === 'P2002') {
         throw new ConflictException('Ya existe una cuenta con este email');
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * find a user by id
+   * @param id user's id
+   * @returns found user
+   * @throws error 404 if not found
+   */
+  async getById(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id
+      },
+      include: {
+        roles: {
+          include: {
+            role: true
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      throw new NotFoundException("user not found");
+    }
+
+    return user;
+  }
+
+  /**
+   * update a user by id
+   * @param id user's id
+   * @param data data to update
+   * @returns updated user
+   * @throws error 404 if not found
+   */
+  async updateById(id: number, data: UpdateProfileDTO) {
+    if (!data || Object.keys(data).length === 0) {
+      throw new BadRequestException("no data provided to update");
+    }
+
+    try {
+      return await this.prisma.user.update({
+        where: { id },
+        data,
+        include: {
+          roles: {
+            include: {
+              role: true
+            }
+          }
+        }
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        throw new NotFoundException('user not found');
       }
       throw error;
     }
