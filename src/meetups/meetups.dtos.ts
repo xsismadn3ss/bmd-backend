@@ -36,31 +36,18 @@ export class CreateMeetupDTO {
   description: string;
 
   @ApiProperty({
-    example: "2025-01-15",
-    description: "Date of the meetup in ISO format (YYYY-MM-DD)",
+    example: "2025-01-15 12:30",
+    description: "Date and start time of the meetup in ISO format (YYYY-MM-DD HH:mm)",
   })
-  @IsDateString({}, { message: "date must be a valid ISO date" })
-  date: string;
+  @IsDateString({}, { message: "date must be a valid datetime" })
+  startDateTime: string;
 
   @ApiProperty({
-    example: "14:30",
-    description: "Start time in 24-hour format (HH:mm)",
+    example: "2025-01-15 13:30",
+    description: "Date and end time of the meetup in ISO format (YYYY-MM-DD HH:mm)",
   })
-  @IsString()
-  @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/, {
-    message: "startTime must be in HH:mm format",
-  })
-  startTime: string;
-
-  @ApiProperty({
-    example: "16:00",
-    description: "End time in 24-hour format (HH:mm)",
-  })
-  @IsString()
-  @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/, {
-    message: "endTime must be in HH:mm format",
-  })
-  endTime: string;
+  @IsDateString({}, { message: "date must be a valid datetime" })
+  endDateTime: string;
 
   @ApiProperty({
     example: "Salon de Eventos Salamanca",
@@ -118,22 +105,10 @@ export class MeetupEntity {
   description: string;
 
   @ApiProperty({
-    example: "2025-01-15T00:00:00.000Z",
-    description: "Date of the meetup (stored as DateTime in the database)",
+    example: "2025-01-15T12:30:00.000Z",
+    description: "Date and start time of the meetup in ISO format",
   })
-  date: Date;
-
-  @ApiProperty({
-    example: "14:30",
-    description: "Start time in HH:mm (24-hour format)",
-  })
-  startTime: string;
-
-  @ApiProperty({
-    example: "16:00",
-    description: "End time in HH:mm (24-hour format)",
-  })
-  endTime: string;
+  startDateTime: Date;
 
   @ApiProperty({
     example: "Salon de Eventos Salamanca",
@@ -190,42 +165,6 @@ export class GetMeetupsDTO {
   @IsOptional()
   @IsString()
   title?: string;
-
-  @ApiPropertyOptional({
-    example: "2025-01-01",
-    description: "start date",
-    type: String
-  })
-  @IsOptional()
-  @IsDateString()
-  startDate?: string;
-
-  @ApiPropertyOptional({
-    example: "2025-12-31",
-    description: "end date",
-    type: String
-  })
-  @IsOptional()
-  @IsDateString()
-  endDate?: string;
-
-  @ApiPropertyOptional({
-    example: "00:00",
-    description: "start time",
-    type: String
-  })
-  @IsOptional()
-  @IsString()
-  startTime?: string;
-
-  @ApiPropertyOptional({
-    example: "23:59",
-    description: "end time",
-    type: String
-  })
-  @IsOptional()
-  @IsString()
-  endTime?: string;
 
   @ApiPropertyOptional({
     description: "boundaries",
