@@ -31,9 +31,8 @@ model Meetup {
   createdBy    Int      @map("created_by")
   title        String   @db.VarChar(100)
   description  String   @db.Text
-  date         DateTime // only date will be used (time will be ignored)
-  startTime    String   @db.VarChar(5) // "HH:MM" format
-  endTime      String   @db.VarChar(5)
+  startDateTime    DateTime   @map("start_date_time")
+  endDateTime      DateTime   @map("end_date_time")
   locationName String   @map("location_name") @db.VarChar(150)
   latitude     Decimal
   longitude    Decimal
