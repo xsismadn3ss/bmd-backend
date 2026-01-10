@@ -5,40 +5,46 @@ import { Meetup } from "@prisma/client";
 
 @Injectable() 
 export class MeetupsService {
-    constructor(private readonly prisma: PrismaService){}
+  constructor(private readonly prisma: PrismaService){}
     
-    async create(dto: CreateMeetupDTO, userId: number): Promise<Meetup> {
-        const {title, description, startDateTime, endDateTime, locationName, latitude, longitude} = dto;
+  async create(dto: CreateMeetupDTO, userId: number): Promise<Meetup> {
+    const {title, description, startDateTime, endDateTime, locationName, latitude, longitude} = dto;
 
-        const meetupStartDateTime = new Date(startDateTime);
-        const meetupEndDateTime = new Date(endDateTime);
+    const meetupStartDateTime = new Date(startDateTime);
+    const meetupEndDateTime = new Date(endDateTime);
 
-        const now = new Date();
+    const now = new Date();
 
-        // validate that the meetup's date is not in the past.
+    // validate both dates are on the same day.
 
-        if (meetupStartDateTime < now) {
-          throw new BadRequestException("meetup date cannot be in the past");
+    if (meetupStartDateTime.toISOString().split("T")[0] != meetupEndDateTime.toISOString().split("T")[0]) {
+      throw new BadRequestException("meetup must start and end on the same day");
+    }
+
+    // validate that the meetup's datetime is not in the past.
+
+    if (meetupStartDateTime < now) {
+      throw new BadRequestException("meetup date cannot be in the past");
+    }
+    
+    // validate that end time is not less or equal to start time
+
+    if (startDateTime >= endDateTime) {
+      throw new BadRequestException("end date and time must be after start date and time");
+    }
+
+    return this.prisma.meetup.create({
+        data: {
+          createdBy: userId,
+          title,
+          description,
+          startDateTime: new Date(meetupStartDateTime),
+          endDateTime: new Date(meetupEndDateTime),
+          locationName,
+          latitude,
+          longitude
         }
-        
-        // validate that end time is not less or equal to start time
-
-        if (startDateTime >= endDateTime) {
-          throw new BadRequestException("end date and time must be after start date and time");
-        }
-
-        return this.prisma.meetup.create({
-            data: {
-              createdBy: userId,
-              title,
-              description,
-              startDateTime: new Date(meetupStartDateTime),
-              endDateTime: new Date(meetupEndDateTime),
-              locationName,
-              latitude,
-              longitude
-            }
-        });
+    });
   }
 
   async get(body: GetMeetupsDTO): Promise<Meetup[]> {
