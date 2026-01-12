@@ -28,18 +28,35 @@ describe('MeetupsService', () => {
   });
 
   describe("create a meetup", () => {
-    // -------- TEST 1: VALIDATE HOURS --------
-
-    it('should throw a bad request error if startTime is greater than or equal to endTime', async () => {
+    it("should throw a bad request error if both dates aren't in the same day", async () => {
       const dto: any = {
-        startTime: '10:00',
-        endTime: '09:30',
+        startDateTime: '2026-12-20 10:00',
+        endDateTime: '2026-12-21 09:30',
       };
 
       await expect(service.create(dto, 1)).rejects.toThrow(BadRequestException);
     });
 
-    // -------- TEST 2: Succesfull creation --------
+    it("should throw a bad request error if meetup date is in the past", async () => {
+      const pastDate = new Date();
+      pastDate.setDate(pastDate.getDate() - 1);
+
+      const dto: any = {
+        startDateTime: pastDate.toISOString().slice(0, 16).replace("T", " "),
+        endDateTime: pastDate.toISOString().slice(0, 16).replace("T", " "),
+      }
+
+      await expect(service.create(dto, 1)).rejects.toThrow(BadRequestException);
+    });
+
+    it("should throw a bad request error if end time is less or equal to start time", async () => {
+      const dto: any = {
+        startDateTime: '2026-12-20 10:00',
+        endDateTime: '2026-12-20 09:30',
+      };
+
+      await expect(service.create(dto, 1)).rejects.toThrow(BadRequestException);
+    });
 
     it('Should create a meetup succesfully', async () => {
       const userId = 1;
@@ -47,9 +64,8 @@ describe('MeetupsService', () => {
       const dto: any = {
         title: 'Meetup Test',
         description: 'Una prueba',
-        date: '2026-12-20',
-        startTime: '10:00',
-        endTime: '12:00',
+        startDateTime: '2026-12-20 10:00',
+        endDateTime: '2026-12-20 12:00',
         locationName: 'Parque',
         latitude: 13.7,
         longitude: -89.2,
@@ -58,7 +74,8 @@ describe('MeetupsService', () => {
       const expectedResult = {
         id: 1,
         ...dto,
-        date: new Date(dto.date),
+        startDateTime: new Date(dto.startDateTime),
+        endDateTime: new Date(dto.endDateTime),
       };
 
       prismaMock.meetup.create.mockResolvedValue(expectedResult);
