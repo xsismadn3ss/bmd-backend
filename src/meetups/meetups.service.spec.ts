@@ -10,7 +10,9 @@ describe('MeetupsService', () => {
   const prismaMock = {
     meetup: {
       create: jest.fn(),
-      findMany: jest.fn().mockResolvedValue([])
+      findMany: jest.fn().mockResolvedValue([]),
+      findUnique: jest.fn(),
+      update: jest.fn()
     }
   };
 
@@ -107,89 +109,6 @@ describe('MeetupsService', () => {
         }
       });
     })
-
-    // start date filter
-
-    it('should filter from a start date', async () => {
-      await service.get({startDate: '2025-11-26'});
-
-      expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
-        where: {
-          date: {
-            gte: new Date("2025-11-26")
-          }
-        }
-      })
-    });
-
-    // end date filter
-
-    it('should filter to an end date', async () => {
-      await service.get({endDate: '2025-11-25'});
-
-      expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
-        where: {
-          date: {
-            lte: new Date('2025-11-25')
-          }
-        }
-      })
-    });
-
-    // start and end date filter
-
-    it("should filter by both startDate and endDate", async () => {
-      await service.get({
-        startDate: "2025-11-20",
-        endDate: "2025-11-30"
-      });
-
-      expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
-        where: {
-          date: {
-            gte: new Date("2025-11-20"),
-            lte: new Date("2025-11-30")
-          }
-        }
-      });
-    });
-
-    // start time filter
-
-    it("should filter by startTime", async () => {
-      await service.get({startTime: "10:00"});
-
-      expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
-        where: {
-          startTime: { gte: "10:00" }
-        },
-      });
-    });
-
-    // end time filter
-
-    it("should filter by endTime", async () => {
-      await service.get({ endTime: "15:00" });
-
-      expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
-        where: {
-          endTime: { lte: "15:00" }
-        },
-      });
-    });
-
-    // start and end time filter
-
-    it("should filter by start time and end time", async () => {
-      await service.get({ startTime: "12:00", endTime: "15:00" });
-
-      expect(prismaMock.meetup.findMany).toHaveBeenCalledWith({
-        where: {
-          startTime: { gte: "12:00"},
-          endTime: { lte: "15:00" }
-        },
-      });
-    });
   
     // boundaries filter
 
@@ -215,6 +134,306 @@ describe('MeetupsService', () => {
           }  
         }
       })
+    });
+  });
+
+  describe("update a meetup", () => {
+    describe("initial validations", () => {
+      it("should throw a no found exception if meetup does not exist", async () => {
+        prismaMock.meetup.findUnique.mockResolvedValue(null);
+
+        await expect(service.update({}, 1, 1)).rejects.toThrow("meetup not found");
+      });
+
+      it("should throw an unauthorized exception if user is not the creator", async () => {
+        prismaMock.meetup.findUnique.mockResolvedValue({
+          id: 1,
+          createdBy: 2,
+          startDateTime: new Date(Date.now() + 1000000),
+        });
+        
+        await expect(service.update({}, 1, 1)).rejects.toThrow("unauthorized");
+      });
+
+      it("should throw a bad request exception if meetup has already happened", async () => {
+        prismaMock.meetup.findUnique.mockResolvedValue({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date(Date.now() - 1000000),
+        });
+
+        await expect(service.update({}, 1, 1)).rejects.toThrow("you cannot update a meetup that has already happened");
+      });
+    });
+
+    describe("validations when updating startDateTime", () => {
+      it("should throw a bad request exception if updated startDateTime is in the past", async () => {
+        const pastDate = new Date(Date.now() - 86400000); // 1 día en el pasado
+        
+        prismaMock.meetup.findUnique.mockResolvedValue({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date(Date.now() + 86400000),
+          endDateTime: new Date(Date.now() + 90000000),
+        });
+
+        const dto: any = {
+          startDateTime: pastDate.toISOString().slice(0, 16).replace("T", " "),
+        };
+
+        await expect(service.update(dto, 1, 1)).rejects.toThrow("meetup date cannot be in the past");
+      });
+
+      it("should throw a bad request exception if dates are not on the same day (updating startDateTime)", async () => {
+        prismaMock.meetup.findUnique.mockResolvedValue({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date('2030-01-15T10:00'),
+          endDateTime: new Date('2030-01-15T12:00'),
+        });
+
+        const dto: any = {
+          startDateTime: "2030-01-14 10:00",
+        };
+
+        await expect(service.update(dto, 1, 1)).rejects.toThrow("meetup must start and end on the same day");
+      });
+
+      it("should throw a bad request exception if updated startDateTime is greater or equal to endDateTime", async () => {
+        prismaMock.meetup.findUnique.mockResolvedValue({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date('2030-01-15T10:00:00'),
+          endDateTime: new Date('2030-01-15T12:00:00'),
+        });
+
+        const dto: any = {
+          startDateTime: '2030-01-15 13:00', 
+        };
+
+        await expect(service.update(dto, 1, 1)).rejects.toThrow("end date and time must be after start date and time");
+      });
+
+      it("should throw a bad request exception if meetup duration is less than one hour when updating startDateTime", async () => {
+        prismaMock.meetup.findUnique.mockResolvedValue({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date('2030-01-15T10:00:00'),
+          endDateTime: new Date('2030-01-15T12:00:00'),
+        });
+
+        const dto: any = {
+          startDateTime: "2030-01-15 11:30" // only 30 minutes of duration
+        }
+
+        await expect(service.update(dto, 1, 1)).rejects.toThrow("meetup must last at least one hour");
+      });
+
+      it("should successfully update when only startDateTime is updated correctly", async () => {
+        prismaMock.meetup.findUnique.mockResolvedValue({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date('2030-01-15T10:00:00'),
+          endDateTime: new Date('2030-01-15T12:00:00'),
+        });
+
+        const dto: any = {
+          startDateTime: "2030-01-15 09:00"
+        }
+
+        prismaMock.meetup.update.mockResolvedValue({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date('2030-01-15T09:00:00'),
+          endDateTime: new Date('2030-01-15T12:00:00'),
+        });
+
+        const result = await service.update(dto, 1, 1);
+
+        expect(prismaMock.meetup.update).toHaveBeenCalledWith({
+          where: {
+            id: 1
+          },
+          data: dto
+        });
+
+        expect(result).toEqual({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date('2030-01-15T09:00:00'),
+          endDateTime: new Date('2030-01-15T12:00:00'),
+        })
+      });
+    })
+
+    describe("validations when updating endDateTime", () => {
+      it("should throw a bad request exception if dates are not on the same day (updating endDateTime)", async () => {
+        prismaMock.meetup.findUnique.mockResolvedValue({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date('2030-01-15T10:00:00'),
+          endDateTime: new Date('2030-01-15T12:00:00'),
+        });
+
+        const dto: any = {
+          endDateTime: '2030-01-16 12:00',
+        };
+
+        await expect(service.update(dto, 1, 1)).rejects.toThrow("meetup must start and end on the same day");
+      });
+
+      it("should throw a bad request exception if updated endDateTime is before or equal to startDateTime", async () => {
+        prismaMock.meetup.findUnique.mockResolvedValue({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date('2030-01-15T10:00:00'),
+          endDateTime: new Date('2030-01-15T12:00:00'),
+        });
+
+        const dto: any = {
+          endDateTime: '2030-01-15 09:00',
+        };
+
+        await expect(service.update(dto, 1, 1)).rejects.toThrow("end date and time must be after start date and time");
+      });
+
+      it("should throw a bad request exception if meetup duration is less than one hour when updating endDateTime", async () => {
+        prismaMock.meetup.findUnique.mockResolvedValue({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date('2030-01-15T10:00:00'),
+          endDateTime: new Date('2030-01-15T12:00:00'),
+        });
+
+        const dto: any = {
+          endDateTime: '2030-01-15 10:30',
+        };
+
+        await expect(service.update(dto, 1, 1)).rejects.toThrow("meetup must last at least one hour");
+      });
+
+      it("should successfully update when only endDateTime is updated correctly", async () => {
+        prismaMock.meetup.findUnique.mockResolvedValue({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date('2030-01-15T10:00:00'),
+          endDateTime: new Date('2030-01-15T12:00:00'),
+        });
+
+        const dto: any = {
+          endDateTime: '2030-01-15 13:00',
+        };
+
+        prismaMock.meetup.update.mockResolvedValue({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date('2030-01-15T10:00:00'),
+          endDateTime: new Date('2030-01-15T13:00:00'),
+        });
+
+        const result = await service.update(dto, 1, 1);
+
+        expect(prismaMock.meetup.update).toHaveBeenCalledWith({
+          where: {
+            id: 1
+          },
+          data: dto
+        });
+
+        expect(result).toEqual({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date('2030-01-15T10:00:00'),
+          endDateTime: new Date('2030-01-15T13:00:00'),
+        });
+      });
+    });
+
+    describe("validations when updating both startDateTime and endDateTime", () => {
+      it("should throw a bad request exception if dates are not on the same day (updating both)", async () => {
+        prismaMock.meetup.findUnique.mockResolvedValue({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date('2030-01-15T10:00:00'),
+          endDateTime: new Date('2030-01-15T12:00:00'),
+        });
+
+        const dto: any = {
+          startDateTime: '2030-01-15 10:00',
+          endDateTime: '2030-01-16 12:00',
+        };
+
+        await expect(service.update(dto, 1, 1)).rejects.toThrow("meetup must start and end on the same day");
+      });
+
+      it("should throw a bad request exception if updated endDateTime is before or equal to updated startDateTime", async () => {
+        prismaMock.meetup.findUnique.mockResolvedValue({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date('2030-01-15T10:00:00'),
+          endDateTime: new Date('2030-01-15T12:00:00'),
+        });
+
+        const dto: any = {
+          startDateTime: '2030-01-15 14:00',
+          endDateTime: '2030-01-15 12:00',
+        };
+
+        await expect(service.update(dto, 1, 1)).rejects.toThrow("end date and time must be after start date and time");
+      });
+
+      it("should throw a bad request exception if meetup duration is less than one hour when updating both", async () => {
+        prismaMock.meetup.findUnique.mockResolvedValue({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date('2030-01-15T10:00:00'),
+          endDateTime: new Date('2030-01-15T12:00:00'),
+        });
+
+        const dto: any = {
+          startDateTime: '2030-01-15 10:00',
+          endDateTime: '2030-01-15 10:30',
+        };
+
+        await expect(service.update(dto, 1, 1)).rejects.toThrow("meetup must last at least one hour");
+      });
+
+      it("should successfully update when both startDateTime and endDateTime are updated correctly", async () => {
+        prismaMock.meetup.findUnique.mockResolvedValue({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date('2030-01-15T10:00:00'),
+          endDateTime: new Date('2030-01-15T12:00:00'),
+        });
+
+        const dto: any = {
+          startDateTime: '2030-01-15 11:00',
+          endDateTime: '2030-01-15 13:00',
+        };
+
+        prismaMock.meetup.update.mockResolvedValue({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date('2030-01-15T11:00:00'),
+          endDateTime: new Date('2030-01-15T13:00:00'),
+        });
+
+        const result = await service.update(dto, 1, 1);
+
+        expect(prismaMock.meetup.update).toHaveBeenCalledWith({
+          where: {
+            id: 1
+          },
+          data: dto
+        });
+
+        expect(result).toEqual({
+          id: 1,
+          createdBy: 1,
+          startDateTime: new Date('2030-01-15T11:00:00'),
+          endDateTime: new Date('2030-01-15T13:00:00'),
+        });
+      });
     });
   });
 });

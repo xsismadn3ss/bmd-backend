@@ -5,7 +5,6 @@ import {
   IsNotEmpty, 
   IsOptional, 
   IsString, 
-  Matches, 
   MaxLength, 
   ValidateNested
 } from "class-validator";
@@ -74,6 +73,68 @@ export class CreateMeetupDTO {
   @IsNotEmpty()
   @IsLongitude()
   longitude: number;
+}
+
+export class UpdateMeetupDTO {
+  @ApiPropertyOptional({
+    example: "Adopting bitcoin",
+    description: "Title of the meetup",
+    maxLength: 100
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100, { message: "title cannot exceed 100 characters" })
+  title?: string;
+
+  @ApiPropertyOptional({
+    example: "The best bitcoin meetup in the world",
+    description: "The description of the meetup",
+    maxLength: 500
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500, { message: "description cannot exceed 500 characters" })
+  description?: string;
+
+  @ApiPropertyOptional({
+    example: "2026-01-16 12:30",
+    description: "start date and time of the meetup",
+  })
+  @IsOptional()
+  startDateTime?: string;
+
+  @ApiPropertyOptional({
+    example: "2026-01-16 14:30",
+    description: "end date and time of the meetup",
+  })
+  @IsOptional()
+  endDateTime?: string;
+
+  @ApiPropertyOptional({
+    example: "Salon de Eventos Salamanca",
+    description: "Name of the meetup location",
+    maxLength: 150,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(150, { message: "locationName cannot exceed 150 characters" })
+  locationName?: string;
+
+  @ApiPropertyOptional({
+    example: 13.69294,
+    description: "Latitude of the meetup location",
+  })
+  @IsOptional()
+  @IsLatitude()
+  latitude?: number;
+
+  @ApiPropertyOptional({
+    example: -89.21819,
+    description: "Longitude of the meetup location",
+  })
+  @IsOptional()
+  @IsLongitude()
+  longitude?: number;
 }
 
 // this DTO is only used for swagger because swagger doesn't accept the type Meetup that Prisma generates. It only accepts classes
@@ -181,4 +242,18 @@ export class GetMeetupsResponseDTO {
     description: "List of meetups"
   })
   meetups: Meetup[];
+}
+
+export class UpdateMeetupResponse {
+  @ApiProperty({
+    example: "Meetup updated successfully",
+    description: "Response message sent by the server",
+  })
+  message: string;
+
+  @ApiProperty({
+    description: "Updated meetup data",
+    type: MeetupEntity
+  })
+  meetup: MeetupEntity;
 }

@@ -1,5 +1,5 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req } from "@nestjs/common";
-import { CreateMeetupDTO, GetMeetupsDTO, GetMeetupsResponseDTO, MeetupResponseDTO} from "./meetups.dtos";
+import { Body, Controller, HttpCode, HttpStatus, Param, ParseIntPipe, Patch, Post, Req } from "@nestjs/common";
+import { CreateMeetupDTO, GetMeetupsDTO, GetMeetupsResponseDTO, MeetupResponseDTO, UpdateMeetupDTO, UpdateMeetupResponse} from "./meetups.dtos";
 import { MeetupsService } from "./meetups.service";
 import { MeetupEntity } from "./meetups.dtos";
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
@@ -56,4 +56,29 @@ export class MeetupsController {
         }
 
     }
+
+    @Patch(":id")
+    @ApiOperation({summary: "update a meetup"})
+    @ApiBody({
+        type: UpdateMeetupDTO,
+        required: true
+    })
+    @ApiResponse({
+        status: 200,
+        description: "meetup updated successfully"
+    })
+    @ApiBearerAuth('access-token')
+    @HttpCode(HttpStatus.OK)
+    async update(@Param('id', ParseIntPipe) id: number, @Req() req: Request & {user: JwtUser}, @Body() body: UpdateMeetupDTO): Promise<UpdateMeetupResponse> {
+        const userId = req.user.sub;
+        const meetup = await this.meetupsService.update(body, id, userId);
+
+        const entity = Object.assign(new MeetupEntity(), meetup);
+
+        return {
+            message: "meetup updated successfully",
+            meetup: entity
+        }
+    }
+
 }
